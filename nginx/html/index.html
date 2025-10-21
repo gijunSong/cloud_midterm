@@ -11,6 +11,8 @@
       button{padding:6px 12px;cursor:pointer}
       pre{background:#f6f8fa;padding:12px;border-radius:8px;overflow:auto}
       label{display:flex;gap:6px;align-items:center}
+      .summary-box{background:#e8f4f8;padding:16px;border-radius:8px;margin-top:16px}
+      .total{font-size:1.2em;font-weight:bold;color:#0066cc}
     </style>
   </head>
   <body>
@@ -29,8 +31,13 @@
     <h2>누적 데이터</h2>
     <pre id="list">[]</pre>
 
-    <h2>요약</h2>
-    <pre id="summary">{"count":0,"total":0}</pre>
+    <div class="summary-box">
+      <h2>요약</h2>
+      <div id="summaryDisplay">
+        <p>총 항목 수: <span id="countDisplay">0</span>개</p>
+        <p class="total">총 지출 합계: <span id="totalDisplay">0</span>원</p>
+      </div>
+    </div>
 
     <script>
       const form = document.getElementById('form');
@@ -39,7 +46,8 @@
       const dateEl = document.getElementById('date');
       const listEl = document.getElementById('list');
       const lastEl = document.getElementById('last');
-      const summaryEl = document.getElementById('summary');
+      const countDisplay = document.getElementById('countDisplay');
+      const totalDisplay = document.getElementById('totalDisplay');
       const downloadBtn = document.getElementById('downloadBtn');
 
       async function fetchRecords(){
@@ -47,10 +55,12 @@
         const data = await r.json();
         listEl.textContent = JSON.stringify(data, null, 2);
       }
+      
       async function fetchSummary(){
         const r = await fetch('/api/summary');
         const data = await r.json();
-        summaryEl.textContent = JSON.stringify(data, null, 2);
+        countDisplay.textContent = data.count;
+        totalDisplay.textContent = data.total.toLocaleString();
       }
 
       form.addEventListener('submit', async (e)=>{
@@ -71,7 +81,6 @@
       });
 
       downloadBtn.addEventListener('click', ()=>{
-        
         window.location.href = '/api/download';
       });
 
