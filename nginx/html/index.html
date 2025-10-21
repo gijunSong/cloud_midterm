@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <title>Expense Tracker</title>
+    <style>
+      body{font-family:system-ui,Arial;margin:40px;line-height:1.6}
+      form{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+      input{padding:6px 10px}
+      button{padding:6px 12px;cursor:pointer}
+      pre{background:#f6f8fa;padding:12px;border-radius:8px;overflow:auto}
+      label{display:flex;gap:6px;align-items:center}
+    </style>
+  </head>
+  <body>
+    <h1>지출 입력</h1>
+    <form id="form">
+      <label>항목: <input id="title" type="text" required placeholder="예: 점심"></label>
+      <label>금액(원): <input id="amount" type="number" min="0" step="1" required></label>
+      <label>날짜: <input id="date" type="date" required></label>
+      <button type="submit">저장</button>
+      <button type="button" id="downloadBtn">JSON 다운로드</button>
+    </form>
+
+    <h2>방금 입력값</h2>
+    <pre id="last"></pre>
+
+    <h2>누적 데이터</h2>
+    <pre id="list">[]</pre>
+
+    <h2>요약</h2>
+    <pre id="summary">{"count":0,"total":0}</pre>
+
+    <script>
+      const form = document.getElementById('form');
+      const titleEl = document.getElementById('title');
+      const amountEl = document.getElementById('amount');
+      const dateEl = document.getElementById('date');
+      const listEl = document.getElementById('list');
+      const lastEl = document.getElementById('last');
+      const summaryEl = document.getElementById('summary');
+      const downloadBtn = document.getElementById('downloadBtn');
+
+      async function fetchRecords(){
+        const r = await fetch('/api/records');
+        const data = await r.json();
+        listEl.textContent = JSON.stringify(data, null, 2);
+      }
+      async function fetchSummary(){
+        const r = await fetch('/api/summary');
+        const data = await r.json();
+        summaryEl.textContent = JSON.stringify(data, null, 2);
+      }
+
+      form.addEventListener('submit', async (e)=>{
+        e.preventDefault();
+        const title = titleEl.value.trim();
+        const amount = Number(amountEl.value);
+        const date = dateEl.value;
+        lastEl.textContent = JSON.stringify({title, amount, date}, null, 2);
+        
+        await fetch('/api/records', {
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({title, amount, date})
+        });
+        form.reset();
+        await fetchRecords();
+        await fetchSummary();
+      });
+
+      downloadBtn.addEventListener('click', ()=>{
+        
+        window.location.href = '/api/download';
+      });
+
+      (async ()=>{
+        try { await fetchRecords(); } catch {}
+        try { await fetchSummary(); } catch {}
+      })();
+    </script>
+  </body>
+</html>
